@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Editor</title>
+    <style>
+        body {
+            background-color: black;
+            color: green;
+            font-family: Arial, sans-serif;
+            position: absolute;
+        }
+        .editor-container {
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+        }
+        .editor {
+            flex: 1;
+            margin: 10px;
+        }
+        textarea {
+            size: 100%;
+            height: 270px;
+            background-color: #333;
+            color: white;
+            border: 1px solid #555;
+            padding: 10px;
+            resize: none;
+        }
+        .buttons {
+            text-align: center;
+            margin: 20px;
+        }
+        button {
+            margin: 10px;
+            padding: 10px;
+            background-color: #444;
+            color: white;
+            border: 1px solid #555;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #555;
+        }
+        iframe {
+            width: 100%;
+            height: 500px;
+            margin: 10px 0;
+            border: 1px solid #555;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #222;
+        }
+        .header .left, .header .right {
+            display: flex;
+            align-items: center;
+        }
+        .header .left h1 {
+            margin: 0;
+        }
+        .header .right button {
+            margin-left: 10px;
+        }
+        .header .right #signup-button {
+            background-color: green;
+        }
+        .editor h2 {
+            display: flex;
+            align-items: center;
+        }
+        .editor h2 img {
+            margin-right: 10px;
+        }
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #222;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            color: white;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="left">
+            <h1>Code Editor</h1>
+        </div>
+        <div class="right">
+            <button id="settings-button">Settings</button>
+            <button id="login-button">Log In</button>
+            <button id="signup-button">Sign Up</button>
+            <span id="user-greeting"></span>
+        </div>
+    </div>
+    <div class="editor-container">
+        <div class="editor">
+            <h2><img src="IMG_20240713_133059.jpg" alt="HTML Icon" width="20" height="20">HTML</h2>
+            <textarea id="html-code" placeholder="Enter HTML here"></textarea>
+        </div>
+        <div class="editor">
+            <h2><img src="IMG_20240713_133059.jpg" alt="CSS Icon" width="20" height="20">CSS</h2>
+            <textarea id="css-code" placeholder="Enter CSS here"></textarea>
+        </div>
+        <div class="editor">
+            <h2><img src="IMG_20240713_133059.jpg" alt="JS Icon" width="20" height="20">JS</h2>
+            <textarea id="js-code" placeholder="Enter Script.js here"></textarea>
+        </div>
+    </div>
+    <div class="buttons">
+        <button onclick="runCode()">Run Code</button>
+        <button style="margin-left: 20px;" onclick="downloadProject()">Download Project</button>
+    </div>
+    <iframe id="output"></iframe>
+
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Settings</h2>
+            <label for="textarea-size">Textarea Size:</label>
+            <input type="number" id="textarea-size" name="textarea-size" value="300"> px
+            <br><br>
+            <label for="bg-color">Background Color:</label>
+            <input type="color" id="bg-color" name="bg-color" value="#000000">
+            <br><br>
+            <label for="font-color">Font Color:</label>
+            <input type="color" id="font-color" name="font-color" value="#00FF00">
+            <br><br>
+            <button onclick="applySettings()">Apply</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        // To store user data
+        const users = {};
+
+        function runCode() {
+            const htmlCode = document.getElementById('html-code').value;
+            const cssCode = document.getElementById('css-code').value;
+            const jsCode = document.getElementById('js-code').value;
+
+            const output = document.getElementById('output');
+            const outputDoc = output.contentDocument || output.contentWindow.document;
+
+            outputDoc.open();
+            outputDoc.write(`
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <style>${cssCode}</style>
+                </head>
+                <body>
+                    ${htmlCode}
+                    <script>${jsCode}<\/script>
+                </body>
+                </html>
+            `);
+            outputDoc.close();
+        }
+
+        function downloadProject() {
+            const zip = new JSZip();
+            const htmlCode = document.getElementById('html-code').value;
+            const cssCode = document.getElementById('css-code').value;
+            const jsCode = document.getElementById('js-code').value;
+
+            zip.file("index.html", `
+                <!DOCTYPE html>
+                <html lang="en">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Downloaded Project</title>
+                    <style>${cssCode}</style>
+                </head>
+                <body>
+                    ${htmlCode}
+                    <script>${jsCode}<\/script>
+                </body>
+                </html>
+            `);
+
+            zip.generateAsync({ type: "blob" })
+                .then(function(content) {
+                    saveAs(content, "project.zip");
+                });
+        }
+
+        function loginUser(username, password) {
+            if (users[username] && users[username] === password) {
+                localStorage.setItem('loggedInUser', username);
+                document.getElementById('user-greeting').innerText = `Hello, ${username}`;
+                document.getElementById('login-button').style.display = 'none';
+                document.getElementById('signup-button').style.display = 'none';
+            } else {
+                alert('Invalid username or password.');
+            }
+        }
+
+        document.getElementById('login-button').onclick = function() {
+            const username = prompt('Enter your username:');
+            const password = prompt('Enter your password:');
+            if (username && password) {
+                loginUser(username, password);
+            } else {
+                alert('Please enter both username and password.');
+            }
+        };
+
+        document.getElementById('signup-button').onclick = function() {
+            const username = prompt('Sign up with a username:');
+            const password = prompt('Sign up with a password:');
+            if (username && password) {
+                users[username] = password;
+                loginUser(username, password);
+            } else {
+                alert('Please enter both username and password.');
+            }
+        };
+
+        // Check if user is already logged in
+        window.onload = function() {
+            const loggedInUser = localStorage.getItem('loggedInUser');
+            if (loggedInUser) {
+                document.getElementById('user-greeting').innerText = `Hello, ${loggedInUser}`;
+                document.getElementById('login-button').style.display = 'none';
+                document.getElementById('signup-button').style.display = 'none';
+            }
+        };
+
+        // Modal functionality
+        var modal = document.getElementById("settingsModal");
+        var btn = document.getElementById("settings-button");
+        var span = document.getElementsByClassName("close")[0];
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        function applySettings() {
+            const textareaSize = document.getElementById('textarea-size').value;
+            const bgColor = document.getElementById('bg-color').value;
+            const fontColor = document.getElementById('font-color').value;
+
+            const textareas = document.querySelectorAll('textarea');
+            textareas.forEach(textarea => {
+                textarea.style.height = `${textareaSize}px`;
+                textarea.style.width = `${textareaSize}px`;
+            });
+
+            document.body.style.backgroundColor = bgColor;
+            document.body.style.color = fontColor;
+
+            modal.style.display = "none";
+        }
+    </script>
+</body>
+</html>
